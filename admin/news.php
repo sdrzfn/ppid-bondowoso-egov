@@ -2,6 +2,7 @@
 include("../config/database.php");
 include("header.php");
 include("sidebar.php");
+
 $berita = $conn->query("SELECT * FROM berita ORDER BY tanggal DESC");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {

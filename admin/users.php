@@ -4,6 +4,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'super_admin') {
     header("Location: ../admin/login.php");
     exit;
 }
+
 include("../config/database.php");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
