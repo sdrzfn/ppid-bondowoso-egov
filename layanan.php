@@ -1,10 +1,19 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+include('config/database.php');
+
+// Ambil data layanan dari database
+$layanan = $conn->query("SELECT * FROM layanan ORDER BY created_at DESC");
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Layanan PPID</title>
+    <title>Layanan Informasi PPID</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="assets/img/bondowoso.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,13 +48,8 @@
 
         .fade-section {
             opacity: 0;
-            animation: fadeIn 0.8s ease forwards;
-        }
-
-        .fade-section {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
+            transform: translateY(40px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
         }
 
         .fade-section.show {
@@ -55,10 +59,12 @@
     </style>
 </head>
 
-<body class="bg-white text-slate-800">
+<script src="assets/js/speech-consent.js"></script>
+<script src="https://cdn.userway.org/widget.js" data-account="d9ZmCPKv7k"></script>
 
+<body class="bg-white text-slate-800">
     <!-- Navbar -->
-    <?php include('navbar.php');?>
+    <?php include('navbar.php'); ?>
 
     <!-- Hero -->
     <header class="relative h-60 md:h-72 w-full bg-center bg-cover"
@@ -66,7 +72,7 @@
         <div class="absolute inset-0 bg-sky-900/40"></div>
         <div class="absolute inset-0 flex items-center">
             <div class="container-wide mx-auto px-4 fade-section">
-                <h1 class="text-white text-3xl md:text-4xl font-extrabold tracking-wide">LAYANAN PPID</h1>
+                <h1 class="text-white text-3xl md:text-4xl font-extrabold tracking-wide">LAYANAN INFORMASI PPID</h1>
             </div>
         </div>
     </header>
@@ -75,195 +81,89 @@
     <main class="max-w-6xl mx-auto px-4 py-10 space-y-12">
 
         <!-- Search & Filter -->
-        <?php include('searchbar.php');?>
+        <?php
+        $sb_target_id = 'layanan-container';
+        $sb_search_endpoint = 'search-layanan.php';
+        $sb_filter_endpoint = 'filter-layanan.php';
+        $sb_filter_fields = [
+            'sumber' => [
+                'label' => 'Sumber',
+                'type' => 'select',
+                'options' => [
+                    '' => 'Semua',
+                    'Dinas Kominfo' => 'Dinas Kominfo',
+                    'PPID Utama' => 'PPID Utama',
+                    'PPID Pembantu' => 'PPID Pembantu'
+                ]
+            ],
+            'sort' => [
+                'label' => 'Urutkan',
+                'type' => 'select',
+                'options' => [
+                    'desc' => 'Terbaru',
+                    'asc' => 'Terlama'
+                ]
+            ]
+        ];
+        include('searchbar.php');
+        ?>
 
-        <!-- Dropdown pemilih form -->
-        <section class="fade-section">
-            <div class="flex justify-center">
-                <div class="relative">
-                    <select id="formSelector"
-                        class="appearance-none pl-4 pr-10 py-2 rounded border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-600">
-                        <option value="permohonan" selected>Form Permohonan Informasi</option>
-                        <option value="keberatan">Form Pengajuan Keberatan</option>
-                    </select>
-                    <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">▼</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Cards -->
+        <!-- Cards Layanan -->
         <section class="container-wide mx-auto px-4 pb-12 fade-section">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Card template repeated 3 times -->
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="layanan-container">
+                <?php if ($layanan->num_rows > 0): ?>
+                    <?php while ($row = $layanan->fetch_assoc()): ?>
+                        <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
+                            <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">
+                            <img src="uploads/layanan/<?= $row['gambar'] ?>" alt="<?= $row['judul'] ?>"
+                                class="w-full h-full object-cover">
                         </div>
-                    </div>
-                </article>
-
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
+                        <div class="p-5 space-y-3">
+                            <h3 class="font-semibold text-lg"><?= $row['judul'] ?></h3>
+                            <p class="text-sm text-slate-600"><?= substr($row['deskripsi'], 0, 100) ?>...</p>
+                            <div class="flex items-center justify-between pt-2 text-xs">
+                                <div class="flex items-center gap-2">
+                                    <!-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
+                                        class="w-5 h-5" alt="PPID" /> -->
+                                    <span class="font-medium"><?= $row['sumber'] ?></span>
+                                </div>
+                                <a href="detail-layanan.php?id=<?= $row['id'] ?>"
+                                    class="text-sky-600 hover:underline">Selengkapnya</a>
                             </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
                         </div>
-                    </div>
-                </article>
-
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
+                        </article>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <p class="col-span-3 text-center text-slate-500 py-10">Belum ada layanan tersedia.</p>
+                <?php endif; ?>
             </div>
         </section>
 
-        <section class="fade-section">
-            <div class="flex justify-center">
-                <div class="relative">
-                    <!-- Tombol -->
-                    <button id="toggleButton"
-                        class="ml-auto block w-40 rounded-md bg-sky-600 text-white px-5 py-2 font-semibold hover:bg-sky-700">
-                        Lainnya
+        <!-- Form Section -->
+        <section id="layanan" class="container-wide mx-auto px-4 pb-20 fade-section">
+            <div class="flex items-center justify-center mb-6">
+                <div class="relative inline-block">
+                    <button id="formSwitcher"
+                        class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 text-sm">
+                        <!-- <span id="formTitle">Form Permohonan Informasi</span> -->
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                        <path fill-rule="evenodd"
+                            d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08Z"
+                            clip-rule="evenodd" />
+                    </svg> -->
                     </button>
+                    <div id="formMenu">
+                    </div>
                 </div>
-            </div>
-
-            <!-- Konten tambahan -->
-            <div id="moreContent" class="hidden mt-4 p-4 bg-slate-100 rounded">
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png"
-                                    class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
-                <article class="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition">
-                    <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Picture</div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-semibold text-lg">Lorem Ipsum Sit Dolor Amet</h3>
-                        <p class="text-sm text-slate-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam
-                            vitae rhoncus commodo sem hendrerit.</p>
-                        <div class="flex items-center justify-between pt-2 text-xs">
-                            <div class="flex items-center gap-2">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lambang_Kabupaten_Bondowoso.png/40px-Lambang_Kabupaten_Bondowoso.png" class="w-5 h-5" alt="PPID" />
-                                <span class="font-medium">@PPID</span>
-                            </div>
-                            <a href="#" class="text-sky-600 hover:underline">Selengkapnya</a>
-                        </div>
-                    </div>
-                </article>
             </div>
         </section>
 
     </main>
 
-    <?php include('footer.php');?>
+    <?php include('footer.php'); ?>
 
     <script src="assets/js/scripts.js"></script>
+    <script src="assets/js/searchbar.js"></script>
 </body>
 
 </html>

@@ -9,6 +9,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
+<script src="assets/js/speech-consent.js"></script>
+<script src="https://cdn.userway.org/widget.js" data-account="d9ZmCPKv7k"></script>
+
+
 <body class="bg-gray-50 font-sans">
 
     <?php include 'navbar.php'; ?>

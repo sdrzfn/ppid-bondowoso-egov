@@ -1,3 +1,9 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+include('config/database.php');
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -108,6 +114,9 @@
     </style>
 </head>
 
+<script src="assets/js/speech-consent.js"></script>
+<script src="https://cdn.userway.org/widget.js" data-account="d9ZmCPKv7k"></script>
+
 <body class="bg-white text-slate-800">
     <!-- Top Bar -->
     <header class="w-full border-b border-slate-200 bg-rose-100/70">
@@ -130,8 +139,7 @@
 
     <!-- Hero -->
     <section class="relative">
-        <img src="assets/img/cover-profil.jpg"
-            alt="Hero" class="w-full h-[280px] md:h-[360px] object-cover" />
+        <img src="assets/img/cover-profil.jpg" alt="Hero" class="w-full h-[280px] md:h-[360px] object-cover" />
         <div class="absolute inset-0 bg-sky-900/40"></div>
         <div class="absolute inset-0 flex items-center">
             <div class="container-wide mx-auto px-4 fade-section">
@@ -143,66 +151,123 @@
     </section>
 
     <!-- Cards -->
-    <section class="cover fade-section flex space-x-32">
-        <div
-            class="w-1/2 h-96 bg-slate-200 grid place-content-center text-slate-500 text-center rounded-lg shadow-md ml-6">
-            Cover Images
-        </div>
-        <!-- Sidebar Berita -->
-        <aside class="lg:col-span-1">
-            <div class="rounded-xl border border-slate-300 p-4">
-                <h3 class="font-semibold mb-4">Berita</h3>
-                <div class="h-1 w-24 bg-sky-600 mb-4"></div>
-
-                <ul class="space-y-4">
-                    <!-- Item berita -->
-                    <li class="flex gap-3 items-center">
-                        <div class="w-16 h-12 bg-slate-200 rounded"></div>
-                        <div class="text-sm">
-                            <p class="font-medium leading-snug">Judul Berita</p>
-                            <p class="text-slate-500 text-xs">Lorem ipsum dolor… <span class="underline">more</span>
-                            </p>
-                        </div>
-                    </li>
-                    <li class="flex gap-3 items-center">
-                        <div class="w-16 h-12 bg-slate-200 rounded"></div>
-                        <div class="text-sm">
-                            <p class="font-medium leading-snug">Judul Berita</p>
-                            <p class="text-slate-500 text-xs">Lorem ipsum dolor… <span class="underline">more</span>
-                            </p>
-                        </div>
-                    </li>
-                    <li class="flex gap-3 items-center">
-                        <div class="w-16 h-12 bg-slate-200 rounded"></div>
-                        <div class="text-sm">
-                            <p class="font-medium leading-snug">Judul Berita</p>
-                            <p class="text-slate-500 text-xs">Lorem ipsum dolor… <span class="underline">more</span>
-                            </p>
-                        </div>
-                    </li>
-                </ul>
+    <section class="container mx-auto px-4 py-12 fade-section">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Card Kiri: Picture -->
+            <div class="lg:col-span-2">
+                <div class="bg-slate-100 rounded-lg shadow-md overflow-hidden h-80 flex items-center justify-center">
+                    <img src="assets/img/cover-profil.jpg" alt="Profil PPID" class="w-full h-full object-cover" />
+                </div>
             </div>
-        </aside>
+
+            <!-- Sidebar Berita -->
+            <aside>
+                <div class="rounded-xl border border-slate-300 p-5 bg-white shadow">
+                    <h3 class="font-semibold mb-1 text-lg">Berita</h3>
+                    <div class="h-1 w-16 bg-sky-600 mb-4"></div>
+
+                    <ul class="space-y-4">
+                        <?php
+                        $berita = $conn->query("SELECT * FROM berita ORDER BY tanggal DESC LIMIT 5");
+                        if ($berita && $berita->num_rows > 0):
+                            while ($b = $berita->fetch_assoc()):
+                                ?>
+                                <li class="flex gap-3 items-start">
+                                    <div class="w-20 h-14 overflow-hidden rounded bg-slate-200 flex-shrink-0">
+                                        <img src="<?= htmlspecialchars($b['gambar']); ?>"
+                                            alt="<?= htmlspecialchars($b['judul']); ?>" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="text-sm flex-1">
+                                        <a href="detail-berita.php?id=<?= $b['id']; ?>"
+                                            class="font-medium leading-snug text-gray-800 hover:text-sky-600 line-clamp-2">
+                                            <?= htmlspecialchars($b['judul']); ?>
+                                        </a>
+                                        <p class="text-slate-500 text-xs mt-1">
+                                            <?= substr(strip_tags($b['isi']), 0, 60); ?>...
+                                            <a href="detail-berita.php?id=<?= $b['id']; ?>"
+                                                class="underline text-sky-600">more</a>
+                                        </p>
+                                    </div>
+                                </li>
+                            <?php endwhile; else: ?>
+                            <li class="text-gray-500 text-sm">Belum ada berita tersedia</li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </aside>
+        </div>
     </section>
 
-    <!-- Berita -->
-    <section class="content fade-section">
-        <div class="main-text">
-            <h2>Sejarah PPID</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae mauris non nulla semper
-                hendrerit.
-                Vivamus tincidunt diam lorem, et imperdiet arcu congue nec...</p>
+    <!-- Sejarah PPID -->
+    <section class="py-12 fade-section">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-sky-600 inline-block">Sejarah Kabupaten Bondowoso
+            </h2>
+            <p class="text-gray-700 leading-relaxed text-justify">
+                Sejarah Kabupaten Bondowoso bermula dari pembukaan hutan (wanawasa) oleh Raden Bagus Asra (Mas Ngabehi
+                Astro Truno) pada awal abad ke-19. Wilayah ini resmi berdiri dan lepas dari Besuki pada 17 Agustus 1819,
+                yang saat ini diperingati sebagai hari jadi kabupaten. Asal-usul Bondowoso berakar dari cucu penguasa
+                Besuki, Raden Bagus Asra. Ia membuka kawasan hutan belukar yang kemudian berkembang menjadi pusat
+                pemerintahan. Nama "Bondowoso" sendiri diyakini berasal dari kata wana yang berarti hutan dan wasa yang
+                berarti tempat atau kekuasaan. Daerah yang terletak di kawasan Tapal Kuda ini juga dikenal sebagai
+                wilayah multikultural yang didominasi oleh suku Jawa dan Madura.
+            </p>
+        </div>
+    </section>
+
+    <!-- Seputar PPID -->
+    <section class="py-12 fade-section">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-sky-600 inline-block">Seputar PPID</h2>
+            <p class="text-gray-700 leading-relaxed text-justify">
+                Ditetapkannya UU No. 14 tahun 2008 tentang Keterbukaan Informasi Publik yang bertujuan untuk mewujudkan
+                tata kelola pemerintahan yang baik dan bertanggungjawab (good governance) melalui penerapan
+                prinsip-prinsip akuntabilitas, transparansi dan supremasi hukum serta melibatkan partisipasi masyarakat
+                dalam setiap proses kebijakan publik. <br><br>
+
+                Dalam proses keterlibatan masyarakat perlu diakomodasikan dengan cara mempermudah jaminan akses
+                informasi publik berdasarkan pedoman pengelolaan informasi dan dokumentasi. Dalam kaitan ini,
+                pengelolaan informasi dan dokumentasi publik diharapkan tidak sampai mengganggu prinsip kehati-hatian
+                dalam menjaga kelangsungan kehidupan berbangsa dan bernegara untuk kepentingan yang lebih luas. <br><br>
+
+                Undang Undang No. 14 tahun 2008 tentang Keterbukaan Informasi Publik (KIP) mengamanatkan, setiap Badan
+                Publik Pemerintah maupun Badan Publik Non Pemerintah mempunyai kewajiban untuk menyediakan Informasi
+                Publik yang berada di bawah kewenangannya kepada masyarakat dengan cepat, aktual, tepat waktu, biaya
+                ringan dan cara sederhana. <br><br>
+
+                Untuk tujuan inilah setiap Badan Publik wajib menunjuk Pejabat Pengelola Informasi dan Dokumentasi
+                (PPID), yang tugas pokok dan fungsinya adalah bertanggungjawab di bidang penyimpanan, pendokumentasian,
+                penyediaan dan pelayanan informasi. PPID Kabupaten Bondowoso dibentuk dan ditetapkan dengan Surat
+                Keputusan Bupati Bondowoso Nomor 188.45/285/430.4.2/2017, sedangkan Badan Publik / OPD di lingkungan
+                Pemerintah Kabupaten Bondowoso sebagai PPID Pembantu di OPD ditetapkan dengan Surat Keputusan Kepala
+                Badan Publik / OPD. <br><br>
+            </p>
         </div>
     </section>
 
     <!-- Struktur Organisasi -->
-    <section class="struktur fade-section">
-        <h2>Struktur Organisasi PPID</h2>
-        <div class="aspect-[4/3] bg-slate-200 grid place-content-center text-slate-500">Sturktur Organisasi</div>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae mauris non nulla semper
-            hendrerit.
-            Vivamus tincidunt diam lorem, et imperdiet arcu congue nec...</p>
+    <section class="py-12 fade-section">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-sky-600 inline-block">Struktur Organisasi PPID
+            </h2>
+            <div class="bg-slate-100 rounded-lg mb-6 overflow-hidden flex items-center justify-center"
+                style="min-height: 300px; max-height: 500px;">
+                <img src="assets/img/struktur-organisasi.jpg" alt="Struktur Organisasi PPID"
+                    class="max-w-full max-h-[500px] object-contain" />
+            </div>
+            <p class="text-gray-700 leading-relaxed text-justify">
+                Posisi tertinggi ditempati oleh Atasan PPID Pengarah. Tugas utamanya memberikan arahan kebijakan
+                strategis pelayanan.Tepat di bawahnya berada posisi Ketua PPID. Ketua bertanggung jawab atas seluruh
+                operasional pelayanan informasi. Selanjutnya, Sekretaris PPID mengatur administrasi dan koordinasi. Di
+                bawah sekretaris, terdapat Anggota PPID sebagai pelaksana. Mereka membantu menjalankan seluruh program
+                kerja dokumentasi.Alur kemudian berlanjut ke Operator PPID Utama. Operator utama bertugas mengelola
+                sistem teknis informasi pusat. Struktur paling bawah adalah Anggota Operator Pembantu. Mereka bekerja di
+                seluruh Organisasi Perangkat Daerah. Tugasnya menghimpun data dari setiap instansi kabupaten. Seluruh
+                tingkatan ini saling terhubung secara terintegrasi.
+            </p>
+        </div>
     </section>
+
 
     <!-- Form Section -->
     <section id="layanan" class="container-wide mx-auto px-4 pb-20 fade-section">
@@ -210,12 +275,12 @@
             <div class="relative inline-block">
                 <button id="formSwitcher"
                     class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 text-sm">
-                    <span id="formTitle">Form Permohonan Informasi</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <!-- <span id="formTitle">Form Permohonan Informasi</span> -->
+                    <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
                         <path fill-rule="evenodd"
                             d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08Z"
                             clip-rule="evenodd" />
-                    </svg>
+                    </svg> -->
                 </button>
                 <div id="formMenu">
                 </div>
@@ -223,7 +288,7 @@
         </div>
     </section>
 
-    <?php include('footer.php');?>
+    <?php include('footer.php'); ?>
 
     <script src="assets/js/scripts.js"></script>
 </body>

@@ -52,18 +52,18 @@ menu.querySelectorAll('button').forEach(btn => {
 // });
 
 document.addEventListener("DOMContentLoaded", () => {
-    const sections = document.querySelectorAll(".fade-section");
+    document.querySelectorAll('.fade-section').forEach(section => {
+        section.classList.add('animate-ready');
+    });
 
-    const options = {
-        threshold: 0.2
-    };
-
+    const sections = document.querySelectorAll(".fade-section.animate-ready");
+    const options = { threshold: 0.2 };
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add("show");  // fade in
+                entry.target.classList.add("show");
             } else {
-                entry.target.classList.remove("show"); // fade out
+                entry.target.classList.remove("show");
             }
         });
     }, options);
@@ -73,51 +73,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Toggle form
-document.getElementById('formSelector').addEventListener('change', (e) => {
-    const v = e.target.value;
-    document.getElementById('formPermohonan').classList.toggle('hidden', v !== 'permohonan');
-    document.getElementById('formKeberatan').classList.toggle('hidden', v !== 'keberatan');
-});
+// // Live Search functionality
+// const searchInput = document.getElementById('searchInput');
+// const cardsContainer = document.getElementById('cardsContainer');
+// const searchResults = document.getElementById('searchResults');
+// const resultsCount = document.getElementById('resultsCount');
+// const noResults = document.getElementById('noResults');
+// const allCards = document.querySelectorAll('.information-card');
 
-const toggleBtn = document.getElementById("toggleButton");
-const moreContent = document.getElementById("moreContent");
+// searchInput.addEventListener("input", performSearch);
 
-toggleBtn.addEventListener("click", () => {
-    moreContent.classList.toggle("hidden");
-});
+// // Function to perform search
+// function performSearch() {
+//     const searchTerm = searchInput.value.toLowerCase().trim();
+//     let visibleCount = 0;
 
-// Live Search functionality
-const searchInput = document.getElementById('searchInput');
-const cardsContainer = document.getElementById('cardsContainer');
-const searchResults = document.getElementById('searchResults');
-const resultsCount = document.getElementById('resultsCount');
-const noResults = document.getElementById('noResults');
-const allCards = document.querySelectorAll('.information-card');
+//     allCards.forEach(card => {
+//         const title = card.getAttribute('data-title').toLowerCase();
+//         const content = card.getAttribute('data-content').toLowerCase();
 
-searchInput.addEventListener("input", performSearch);
+//         // Check if search term matches title or content
+//         const matches = title.includes(searchTerm) || content.includes(searchTerm);
 
-// Function to perform search
-function performSearch() {
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    let visibleCount = 0;
+//         if (searchTerm === '' || matches) {
+//             card.style.display = 'block';
+//             card.style.opacity = '1';
+//             card.style.transform = 'scale(1)';
+//             visibleCount++;
+//         } else {
+//             card.style.display = 'none';
+//             card.style.opacity = '0';
+//             card.style.transform = 'scale(0.95)';
+//         }
+//     });
+// }
 
-    allCards.forEach(card => {
-        const title = card.getAttribute('data-title').toLowerCase();
-        const content = card.getAttribute('data-content').toLowerCase();
-
-        // Check if search term matches title or content
-        const matches = title.includes(searchTerm) || content.includes(searchTerm);
-
-        if (searchTerm === '' || matches) {
-            card.style.display = 'block';
-            card.style.opacity = '1';
-            card.style.transform = 'scale(1)';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.95)';
-        }
-    });
-}
+// let offset = 6;
+// document.getElementById('loadMoreBtn').addEventListener('click', function () {
+//     fetch('load-more.php', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+//         body: 'offset=' + offset
+//     })
+//         .then(res => res.text())
+//         .then(data => {
+//             if (data.trim() !== '') {
+//                 document.getElementById('layanan-container').innerHTML += data;
+//                 offset += 6;
+//             } else {
+//                 document.getElementById('loadMoreBtn').innerText = "Tidak ada lagi";
+//                 document.getElementById('loadMoreBtn').disabled = true;
+//             }
+//         });
+// });
