@@ -69,7 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 lampiran_ktp, rincian_informasi, tujuan_penggunaan,
                 format_salinan, cara_penyampaian, ip_address, user_agent
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
+
+            // bind_param butuh variabel murni (by-reference), bukan ekspresi ??
+            $lampiranKtp = $data['lampiran_ktp'] ?? null;
+
             $stmt->bind_param(
                 "sssssssssssssssss",
                 $ticketNumber,
@@ -82,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['email'],
                 $data['no_whatsapp'],
                 $data['alamat'],
-                $data['lampiran_ktp'] ?? null,
+                $lampiranKtp,
                 $data['rincian_informasi'],
                 $data['tujuan_penggunaan'],
                 $data['format_salinan'],
@@ -131,7 +134,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($stmt->execute()) {
             $ticketId = $conn->insert_id;
-            
+
+            // Catat riwayat status awal tiket (dibuat defensif: kalau gagal, jangan sampai
+            // merusak response JSON utama)
+            $historyStmt = $conn->prepare("INSERT INTO ticket_history (
+                ticket_id, status_lama, status_baru, catatan, updated_by
+            ) VALUES (?, ?, ?, ?, ?)");
+            if ($historyStmt) {
+                $historyStatusLama = null; // tiket baru dibuat, belum ada status sebelumnya
+                $historyStatusBaru = 'Menunggu Diproses';
+                $historyCatatan = 'Tiket dibuat oleh pemohon.';
+                $historyUpdatedBy = 'Sistem';
+                $historyStmt->bind_param(
+                    "issss",
+                    $ticketId,
+                    $historyStatusLama,
+                    $historyStatusBaru,
+                    $historyCatatan,
+                    $historyUpdatedBy
+                );
+                if (!$historyStmt->execute()) {
+                    error_log("Insert ticket_history gagal: " . $historyStmt->error);
+                }
+            } else {
+                error_log("Prepare ticket_history gagal: " . $conn->error);
+            }
+
+
             // Send email notification
             $mail = new PHPMailer(true);
             try {
@@ -184,6 +213,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'ticket_number' => $displayNumber,
                 'redirect' => 'ticket.php?number=' . $displayNumber . '&type=' . $data['form_type']
             ]);
+            exit;
+        } else {
+            // Jangan biarkan gagal insert diam-diam - selalu balas JSON
+            error_log("Insert tiket gagal: " . $stmt->error);
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan data tiket.']);
             exit;
         }
     }

@@ -105,7 +105,7 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
                 </select>
             </span>
         </div>
-        
+
         <!-- Progress Stepper -->
         <div class="mb-10 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
             <div class="flex items-center justify-between relative">
@@ -235,7 +235,7 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
                             <label class="block text-xs font-semibold text-slate-700 mb-1">
                                 Unggah Scan / Foto KTP <span class="text-rose-500">*</span>
                             </label>
-                            <div
+                            <div id="ktpUploadContainer"
                                 class="border-2 border-dashed border-slate-200 hover:border-sky-500 rounded-xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer">
                                 <i class="fa-solid fa-cloud-arrow-up text-2xl text-sky-600 mb-2"></i>
                                 <p class="text-xs font-semibold text-slate-700">
@@ -541,6 +541,7 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
             // Get current form type from hidden input
             const formTypeInput = document.getElementById('formTypeInput');
             const currentForm = formTypeInput ? formTypeInput.value : 'permohonan';
+            updateRequiredFields();
 
             // Determine total steps based on form type
             totalSteps = currentForm === 'keberatan' ? 4 : 3;
@@ -714,6 +715,8 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
                 const formType = document.getElementById('formTypeInput').value;
                 if (formType === 'permohonan') {
                     const formData = new FormData(document.getElementById('ticketForm'));
+                    // Wajib: server pakai $_POST['step'] untuk menentukan blok mana yang dijalankan
+                    formData.append('step', currentStep.toString());
 
                     try {
                         const response = await fetch('ticket-proses.php', {
@@ -805,22 +808,161 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
                 firstSection.classList.add('active');
             }
 
-            // Update UI
             updateStepUI();
+            updateRequiredFields();
         });
 
         // File upload visual feedback
-        document.querySelector('input[name="lampiran_ktp"]')?.addEventListener('change', function () {
-            const container = this.closest('div');
-            if (this.files.length > 0) {
+        (function () {
+            const container = document.getElementById('ktpUploadContainer');
+            const input = document.getElementById('ktpUpload');
+
+            if (!container || !input) return;
+
+            // Click container to trigger file input
+            container.addEventListener('click', function (e) {
+                if (e.target.tagName !== 'INPUT' || e.target.type !== 'file') {
+                    input.click();
+                }
+            });
+
+            // Drag and drop handlers
+            container.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.add('border-sky-500', 'bg-sky-50');
+            });
+
+            container.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.remove('border-sky-500', 'bg-sky-50');
+            });
+
+            container.addEventListener('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.remove('border-sky-500', 'bg-sky-50');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    input.files = files;
+                    updateUploadUI(container, input, files[0].name);
+                }
+            });
+
+            // File input change handler
+            input.addEventListener('change', function () {
+                if (this.files.length > 0) {
+                    updateUploadUI(container, input, this.files[0].name);
+                }
+            });
+
+            function updateUploadUI(container, input, fileName) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+
+                if (!allowedExtensions.includes(fileExtension)) {
+                    alert('Format file tidak didukung. Gunakan JPG, PNG, atau PDF.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validate file size (2MB max)
+                const maxSize = 2 * 1024 * 1024; // 2MB
+                if (input.files[0].size > maxSize) {
+                    alert('Ukuran file terlalu besar. Maksimal 2 MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Update UI to show selected file
                 container.innerHTML = `
             <i class="fa-solid fa-file-check text-2xl text-green-600 mb-2"></i>
-            <p class="text-xs font-semibold text-slate-700">${this.files[0].name}</p>
+            <p class="text-xs font-semibold text-slate-700">${fileName}</p>
             <p class="text-[11px] text-slate-400 mt-1">Klik untuk ganti berkas</p>
-            <input type="file" name="lampiran_ktp" accept=".jpg,.jpeg,.png,.pdf" class="hidden">
+            <input type="file" name="lampiran_ktp" accept=".jpg,.jpeg,.png,.pdf" class="hidden" id="ktpUpload">
         `;
+
+                // Re-attach event listeners to new elements
+                const newInput = document.getElementById('ktpUpload');
+                const newContainer = document.getElementById('ktpUploadContainer');
+
+                if (newContainer && newInput) {
+                    // Click handler
+                    newContainer.addEventListener('click', function (e) {
+                        if (e.target.tagName !== 'INPUT' || e.target.type !== 'file') {
+                            newInput.click();
+                        }
+                    });
+
+                    // Drag and drop handlers
+                    newContainer.addEventListener('dragover', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        newContainer.classList.add('border-sky-500', 'bg-sky-50');
+                    });
+
+                    newContainer.addEventListener('dragleave', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        newContainer.classList.remove('border-sky-500', 'bg-sky-50');
+                    });
+
+                    newContainer.addEventListener('drop', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        newContainer.classList.remove('border-sky-500', 'bg-sky-50');
+
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            newInput.files = files;
+                            updateUploadUI(newContainer, newInput, files[0].name);
+                        }
+                    });
+
+                    // Change handler
+                    newInput.addEventListener('change', function () {
+                        if (this.files.length > 0) {
+                            updateUploadUI(newContainer, newInput, this.files[0].name);
+                        }
+                    });
+                }
             }
-        });
+        })();
+
+        // Fungsi untuk update required fields berdasarkan form type dan step
+        function updateRequiredFields() {
+            const formType = document.getElementById('formTypeInput').value;
+            const currentStepVal = currentStep;
+
+            document.querySelectorAll('#ticketForm input, #ticketForm textarea, #ticketForm select').forEach(field => {
+                if (field.hasAttribute('required') && field.closest('.form-section')) {
+                    field.removeAttribute('required');
+                }
+            });
+
+            let activeStep;
+            if (formType === 'keberatan') {
+                activeStep = 4;
+            } else {
+                activeStep = 3;
+            }
+
+            document.querySelectorAll(`#ticketForm .form-section[data-step="${currentStepVal}"] input[required], #ticketForm .form-section[data-step="${currentStepVal}"] textarea[required], #ticketForm .form-section[data-step="${currentStepVal}"] select[required]`).forEach(field => {
+                field.setAttribute('required', 'required');
+            });
+
+            if (currentStepVal === activeStep) {
+                document.querySelectorAll(`#ticketForm .form-section[data-step="${currentStepVal}"] input, #ticketForm .form-section[data-step="${currentStepVal}"] textarea, #ticketForm .form-section[data-step="${currentStepVal}"] select`).forEach(field => {
+                    if (field.type !== 'hidden' && field.type !== 'submit' && field.type !== 'button') {
+                        field.setAttribute('required', 'required');
+                    }
+                });
+            }
+        }
 
         // Initialize
         updateStepUI();
