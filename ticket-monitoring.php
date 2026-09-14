@@ -156,10 +156,7 @@ if ($searchNumber) {
             </div>
         </div>
 
-        <!-- Ticket Result Card (akan di-render oleh JavaScript) -->
-        <div id="ticketResult" class="hidden">
-            <!-- Content will be populated by JavaScript -->
-        </div>
+        <div id="ticketResult" class="hidden"></div>
 
         <!-- Server-side rendered ticket (jika ada dari GET parameter) -->
         <?php if ($ticketData): ?>
