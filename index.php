@@ -23,6 +23,11 @@ $sb_filter_fields = [
         ]
     ]
 ];
+
+$banner = $conn->query("SELECT * FROM site_banner WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$bannerJudul = $banner ? $banner['judul'] : 'Peringatan Dini Cuaca & Potensi Bencana:';
+$bannerDeskripsi = $banner ? $banner['deskripsi'] : 'Informasi tanggap darurat dan nomor kontak bantuan darurat 24 Jam.';
+$bannerLink = $banner && !empty($banner['link_url']) ? $banner['link_url'] : '';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -155,33 +160,66 @@ $sb_filter_fields = [
     <?php include('navbar.php'); ?>
 
     <!-- ==================== ALERT BANNER: SERTA-MERTA ==================== -->
-    <div id="sertaMertaBanner" class="bg-amber-50 border-y border-amber-200/80 overflow-hidden">
-        <div class="marquee-container py-3">
-            <div class="marquee-content">
-                <span class="inline-flex items-center gap-2 mx-4">
-                    <span
-                        class="flex-shrink-0 bg-amber-600 text-white px-2 py-0.5 rounded font-bold uppercase text-[10px] tracking-wider">
-                        Serta-Merta
-                    </span>
-                    <span class="font-medium text-amber-900 text-xs sm:text-sm">
-                        <span class="font-semibold">Peringatan Dini Cuaca & Potensi Bencana:</span> Informasi tanggap
-                        darurat dan nomor kontak bantuan darurat 24 Jam.
-                    </span>
-                </span>
-                <!-- Duplicate for seamless loop -->
-                <span class="inline-flex items-center gap-2 mx-4">
-                    <span
-                        class="flex-shrink-0 bg-amber-600 text-white px-2 py-0.5 rounded font-bold uppercase text-[10px] tracking-wider">
-                        Serta-Merta
-                    </span>
-                    <span class="font-medium text-amber-900 text-xs sm:text-sm">
-                        <span class="font-semibold">Peringatan Dini Cuaca & Potensi Bencana:</span> Informasi tanggap
-                        darurat dan nomor kontak bantuan darurat 24 Jam.
-                    </span>
-                </span>
+    <?php if ($bannerJudul || $bannerDeskripsi): ?>
+        <div id="sertaMertaBanner" class="bg-amber-50 border-y border-amber-200/80 overflow-hidden">
+            <div class="marquee-container py-3">
+                <div class="marquee-content">
+                    <?php if ($bannerLink): ?>
+                        <a href="<?= htmlspecialchars($bannerLink) ?>" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 mx-4 hover:opacity-80 transition-opacity cursor-pointer">
+                            <span
+                                class="flex-shrink-0 bg-amber-600 text-white px-2 py-0.5 rounded font-bold uppercase text-[10px] tracking-wider">
+                                Serta-Merta
+                            </span>
+                            <span class="font-medium text-amber-900 text-xs sm:text-sm">
+                                <span class="font-semibold"><?= htmlspecialchars($bannerJudul) ?></span>
+                                <?= htmlspecialchars($bannerDeskripsi) ?>
+                            </span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-amber-600 ml-1"></i>
+                        </a>
+                    <?php else: ?>
+                        <span class="inline-flex items-center gap-2 mx-4">
+                            <span
+                                class="flex-shrink-0 bg-amber-600 text-white px-2 py-0.5 rounded font-bold uppercase text-[10px] tracking-wider">
+                                Serta-Merta
+                            </span>
+                            <span class="font-medium text-amber-900 text-xs sm:text-sm">
+                                <span class="font-semibold"><?= htmlspecialchars($bannerJudul) ?></span>
+                                <?= htmlspecialchars($bannerDeskripsi) ?>
+                            </span>
+                        </span>
+                    <?php endif; ?>
+
+                    <!-- Duplicate for seamless loop -->
+                    <?php if ($bannerLink): ?>
+                        <a href="<?= htmlspecialchars($bannerLink) ?>" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 mx-4 hover:opacity-80 transition-opacity cursor-pointer">
+                            <span
+                                class="flex-shrink-0 bg-amber-600 text-white px-2 py-0.5 rounded font-bold uppercase text-[10px] tracking-wider">
+                                Serta-Merta
+                            </span>
+                            <span class="font-medium text-amber-900 text-xs sm:text-sm">
+                                <span class="font-semibold"><?= htmlspecialchars($bannerJudul) ?></span>
+                                <?= htmlspecialchars($bannerDeskripsi) ?>
+                            </span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-amber-600 ml-1"></i>
+                        </a>
+                    <?php else: ?>
+                        <span class="inline-flex items-center gap-2 mx-4">
+                            <span
+                                class="flex-shrink-0 bg-amber-600 text-white px-2 py-0.5 rounded font-bold uppercase text-[10px] tracking-wider">
+                                Serta-Merta
+                            </span>
+                            <span class="font-medium text-amber-900 text-xs sm:text-sm">
+                                <span class="font-semibold"><?= htmlspecialchars($bannerJudul) ?></span>
+                                <?= htmlspecialchars($bannerDeskripsi) ?>
+                            </span>
+                        </span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
-    </div>
+    <?php endif; ?>
 
     <!-- ==================== HERO SECTION ==================== -->
     <section
