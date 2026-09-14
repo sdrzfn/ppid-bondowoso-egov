@@ -38,7 +38,7 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
                 <path
                     d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L13 1.586A2 2 0 0011.586 1H4z" />
             </svg>
-            Dokumen
+            Dokumen Informasi
         </a>
 
         <!-- Kelola Layanan -->
@@ -50,6 +50,28 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
                     d="M7.5 11.25v-2.625a2.625 2.625 0 115.25 0V11.25m0-4.125V4.875a2.625 2.625 0 115.25 0v2.25m0 0V3.375a2.625 2.625 0 115.25 0v7.875a9 9 0 01-9 9h-.75a5.25 5.25 0 01-5.25-5.25v-3.75a2.625 2.625 0 115.25 0v.75" />
             </svg>
             <span class="font-medium">Layanan</span>
+        </a>
+
+        <!-- Kelola Tiket Permohonan Informasi -->
+        <a href="tickets.php"
+            class="flex items-center gap-3 px-3 py-2 font-semibold rounded hover:bg-blue-700 hover:pl-4 transition-all duration-200 border-b border-blue-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-200" viewBox="0 0 20 20"
+                fill="currentColor">
+                <path
+                    d="M4 3h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM4 9h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6a1 1 0 011-1z" />
+            </svg>
+            Permohonan Informasi
+        </a>
+
+        <!-- Homepage Cards -->
+        <a href="homepage_cards.php"
+            class="flex items-center gap-3 px-3 py-2 font-semibold rounded hover:bg-blue-700 hover:pl-4 transition-all duration-200 border-b border-blue-700">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            Peringatan Serta Merta
         </a>
 
         <!-- Kelola Berita -->
@@ -73,16 +95,6 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
             Survey
         </a>
 
-        <!-- Homepage Cards -->
-        <a href="homepage_cards.php"
-            class="flex items-center gap-3 px-3 py-2 font-semibold rounded hover:bg-blue-700 hover:pl-4 transition-all duration-200 border-b border-blue-700">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-            </svg>
-            Homepage Cards
-        </a>
 
         <?php if ($role === 'super_admin'): ?>
             <!-- User -->
@@ -92,7 +104,7 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
                     fill="currentColor">
                     <path d="M10 3a3 3 0 100 6 3 3 0 000-6zm-7 14a7 7 0 1114 0H3z" />
                 </svg>
-                User
+                Daftar User
             </a>
 
             <!-- OPD -->
@@ -117,7 +129,7 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
                 Kategori
             </a>
 
-            <a href="../admin/permohonan.php"
+            <!-- <a href="../admin/permohonan.php"
                 class="flex items-center gap-3 px-3 py-2 font-semibold rounded hover:bg-blue-700 hover:pl-4 transition-all duration-200 border-b border-blue-700">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-200" viewBox="0 0 20 20"
                     fill="currentColor">
@@ -135,7 +147,7 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
                         d="M4 3h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM4 9h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6a1 1 0 011-1z" />
                 </svg>
                 Pengajuan Keberatan
-            </a>
+            </a> -->
 
             <a href="../admin/kontak.php"
                 class="flex items-center gap-3 px-3 py-2 font-semibold rounded hover:bg-blue-700 hover:pl-4 transition-all duration-200 border-b border-blue-700">
