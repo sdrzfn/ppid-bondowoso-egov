@@ -15,7 +15,8 @@ $sql = "SELECT d.id, d.title, d.file_path, d.status, d.created_at,
         FROM documents d
         LEFT JOIN opd o ON d.opd_id = o.id
         LEFT JOIN categories c ON d.category_id = c.id
-        WHERE d.status = 'publish'";
+        WHERE d.status = 'publish'
+        AND d.category_id != 4";
 
 if ($search !== '') {
     $search_safe = $conn->real_escape_string($search);
@@ -184,35 +185,25 @@ $docs = $conn->query($sql);
                                             <?= htmlspecialchars($d['opd_name'] ?? '-') ?>
                                         </td>
                                         <td class="px-4 py-3 border-t border-slate-200">
-                                            <?php
-                                            $isDikecualikan = strtolower(trim($d['category_name'] ?? '')) === 'informasi yang dikecualikan';
-                                            ?>
-                                            <?php if ($isDikecualikan): ?>
-                                                <span
-                                                    class="inline-block px-3 py-1 rounded bg-gray-300 text-gray-500 cursor-not-allowed">
-                                                    Unduh
-                                                </span>
-                                            <?php else: ?>
-                                                <a href="<?= htmlspecialchars($d['file_path']) ?>" download
-                                                    class="inline-block px-3 py-1 rounded bg-sky-600 text-white hover:bg-sky-700">
-                                                    Unduh
-                                                </a>
-                                            <?php endif; ?>
+                                            <a href="<?= htmlspecialchars($d['file_path']) ?>" download
+                                                class="inline-block px-3 py-1 rounded bg-sky-600 text-white hover:bg-sky-700">
+                                                Unduh
+                                            </a>
                                         </td>
                                         <td class="px-4 py-3 border-t border-slate-200">
-                                            <?php if ($isDikecualikan): ?>
-                                                <span class="text-gray-400 cursor-not-allowed">Lihat</span>
-                                            <?php else: ?>
-                                                <a href="<?= htmlspecialchars($d['file_path']) ?>" target="_blank"
-                                                    class="text-sky-600 hover:underline">Lihat</a>
-                                            <?php endif; ?>
+                                            <a href="<?= htmlspecialchars($d['file_path']) ?>" target="_blank"
+                                                class="text-sky-600 hover:underline">Lihat</a>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
                                     <td colspan="6" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada dokumen yang tersedia
+                                        Belum ada dokumen yang tersedia atau <br />Informasi termasuk ke dalam kategori yang
+                                        dikecualikan <br /><br />
+                                        <a href="ticket-form.php" class="inline-block px-3 py-1 rounded bg-sky-600 text-white hover:bg-sky-700">
+                                            Ajukan Permohonan
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endif; ?>
