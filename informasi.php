@@ -10,7 +10,7 @@ $filter_cat = $_GET['category'] ?? '';
 $filter_opd = $_GET['opd'] ?? '';
 
 // query dokumen
-$sql = "SELECT d.id, d.title, d.file_path, d.status, d.created_at, 
+$sql = "SELECT d.id, d.title, d.file_path, d.berita_link, d.status, d.created_at, 
                o.name AS opd_name, c.name AS category_name
         FROM documents d
         LEFT JOIN opd o ON d.opd_id = o.id
@@ -166,6 +166,7 @@ $docs = $conn->query($sql);
                                 <th class="px-4 py-3 border-r border-slate-300">Kategori</th>
                                 <th class="px-4 py-3 border-r border-slate-300">OPD</th>
                                 <th class="w-32 px-4 py-3 border-r border-slate-300">Unduh</th>
+                                <th class="w-28 px-4 py-3">Link</th>
                                 <th class="w-28 px-4 py-3">Lihat</th>
                             </tr>
                         </thead>
@@ -191,8 +192,21 @@ $docs = $conn->query($sql);
                                             </a>
                                         </td>
                                         <td class="px-4 py-3 border-t border-slate-200">
+                                            <?php if ($d['berita_link']): ?>
+                                                <a href="<?= htmlspecialchars($d['berita_link']) ?>" target="_blank"
+                                                    class="inline-block px-3 py-1 rounded bg-sky-600 text-white hover:bg-sky-700 text-xs">
+                                                    Lihat Link
+                                                </a>
+                                            <?php else: ?>
+                                                <span
+                                                    class="inline-block px-3 py-1 rounded bg-gray-300 text-gray-500 cursor-not-allowed text-xs">
+                                                    Lihat Link
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-4 py-3 border-t border-slate-200">
                                             <a href="<?= htmlspecialchars($d['file_path']) ?>" target="_blank"
-                                                class="text-sky-600 hover:underline">Lihat</a>
+                                                class="text-sky-600 hover:underline">Lihat File</a>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
@@ -201,7 +215,8 @@ $docs = $conn->query($sql);
                                     <td colspan="6" class="px-4 py-6 text-center text-gray-500">
                                         Belum ada dokumen yang tersedia atau <br />Informasi termasuk ke dalam kategori yang
                                         dikecualikan <br /><br />
-                                        <a href="ticket-form.php" class="inline-block px-3 py-1 rounded bg-sky-600 text-white hover:bg-sky-700">
+                                        <a href="ticket-form.php"
+                                            class="inline-block px-3 py-1 rounded bg-sky-600 text-white hover:bg-sky-700">
                                             Ajukan Permohonan
                                         </a>
                                     </td>

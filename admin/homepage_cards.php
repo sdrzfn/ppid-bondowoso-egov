@@ -11,13 +11,12 @@ $bannerLink = $banner ? $banner['link_url'] : '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_banner'])) {
     $judul = $conn->real_escape_string($_POST['banner_judul']);
     $deskripsi = $conn->real_escape_string($_POST['banner_deskripsi']);
-    $linkUrl = $conn->real_escape_string($_POST['banner_link_url']);
+    $beritaId = (int) ($_POST['banner_berita_id'] ?? 0);
 
-    // Validate URL if not empty
-    if (!empty($linkUrl) && !filter_var($linkUrl, FILTER_VALIDATE_URL)) {
-        $_SESSION['error'] = 'URL tidak valid. Masukkan URL yang benar (contoh: https://example.com)';
-        header("Location: homepage_cards.php");
-        exit;
+    // Jika ada berita yang dipilih, set link ke detail berita
+    $linkUrl = '';
+    if ($beritaId > 0) {
+        $linkUrl = 'detail-berita.php?id=' . $beritaId;
     }
 
     // Check if banner exists
@@ -112,13 +111,13 @@ include("sidebar.php");
 
 <head>
     <meta charset="UTF-8">
-    <title>Kelola Homepage Cards - Admin PPID</title>
+    <title>Kelola Info Serta Merta - Admin PPID</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6">
     <div class="flex-1 p-2 ml-2">
-        <h1 class="text-2xl mb-4 mt-4 font-bold text-black">Kelola Homepage Cards</h1>
+        <h1 class="text-2xl mb-4 mt-4 font-bold text-black">Kelola Banner Informasi Serta Merta</h1>
 
         <!-- Tabel -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -126,8 +125,8 @@ include("sidebar.php");
                 <i class="fa-solid fa-bullhorn text-amber-600"></i>
                 Kelola Banner Serta-Merta (Homepage)
             </h2>
-            <p class="text-xs text-slate-500 mb-4">Teks ini akan muncul di homepage pada bagian banner Serta-Merta
-                dengan animasi marquee. Klik banner akan mengarah ke link yang ditentukan.</p>
+            <p class="text-xs text-slate-500 mb-4">Teks ini akan muncul di halaman depan pada bagian banner Serta-Merta
+                dengan tulisan berjalan. Banner bisa diklik dan akan mengarah ke berita yang sesuai dengan teks.</p>
 
             <?php if (isset($_SESSION['success'])): ?>
                 <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -143,29 +142,46 @@ include("sidebar.php");
                 </div>
             <?php endif; ?>
 
+            <?php
+            // Ambil daftar berita untuk dropdown
+            $beritaList = $conn->query("SELECT id, judul FROM berita ORDER BY tanggal DESC");
+            $currentBeritaId = '';
+            if ($bannerLink && strpos($bannerLink, 'detail-berita.php?id=') === 0) {
+                $currentBeritaId = str_replace('detail-berita.php?id=', '', $bannerLink);
+            }
+            ?>
+
             <form method="POST" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Judul Banner</label>
-                        <input type="text" name="banner_judul" value="<?= htmlspecialchars($bannerJudul) ?>"
-                            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="Contoh: Peringatan Dini Cuaca & Potensi Bencana:">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Deskripsi/Isi Banner</label>
-                        <input type="text" name="banner_deskripsi" value="<?= htmlspecialchars($bannerDeskripsi) ?>"
-                            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="Contoh: Informasi tanggap darurat dan nomor kontak bantuan darurat 24 Jam.">
-                    </div>
-                </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Link URL (Opsional)</label>
-                    <input type="url" name="banner_link_url" value="<?= htmlspecialchars($bannerLink) ?>"
-                        placeholder="https://example.com"
+                    <label class="block text-sm font-medium mb-1">Pilih Berita untuk Banner</label>
+                    <select name="banner_berita_id" id="bannerBeritaSelect"
                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                    <p class="text-xs text-slate-500 mt-1">Biarkan kosong jika banner tidak perlu diklik. Jika diisi,
-                        banner akan bisa diklik dan mengarah ke URL tersebut.</p>
+                        <option value="">-- Pilih Berita --</option>
+                        <?php while ($b = $beritaList->fetch_assoc()): ?>
+                            <option value="<?= $b['id'] ?>" <?= $currentBeritaId == $b['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($b['judul']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">Judul banner akan diisi otomatis dari judul berita yang
+                        dipilih.</p>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Judul Banner</label>
+                    <input type="text" name="banner_judul" id="bannerJudul"
+                        value="<?= htmlspecialchars($bannerJudul) ?>"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        placeholder="Judul akan terisi otomatis saat memilih berita">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Deskripsi/Isi Banner</label>
+                    <input type="text" name="banner_deskripsi" value="<?= htmlspecialchars($bannerDeskripsi) ?>"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        placeholder="Isi deskripsi secara manual">
+                </div>
+
                 <div class="flex justify-end">
                     <button type="submit" name="update_banner"
                         class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-5 py-2 rounded-lg transition">
@@ -281,7 +297,7 @@ include("sidebar.php");
 
             <!-- Form Content (Scrollable) -->
             <!-- <div class="flex-1 overflow-y-auto p-6"> -->
-                <!-- <form method="POST" enctype="multipart/form-data">
+            <!-- <form method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="editId">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -322,14 +338,14 @@ include("sidebar.php");
                         </div>
                     </div> -->
 
-                    <!-- Footer Actions -->
-                    <!-- <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+            <!-- Footer Actions -->
+            <!-- <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                         <button type="button" onclick="closeModal()"
                             class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-colors">Batal</button>
                         <button type="submit" name="update"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">Update</button>
                     </div> -->
-                <!-- </form> -->
+            <!-- </form> -->
             <!-- </div> -->
         </div>
     </div>
@@ -377,6 +393,16 @@ include("sidebar.php");
                 if (!modal.classList.contains('hidden')) {
                     closeModal();
                 }
+            }
+        });
+
+        document.getElementById('bannerBeritaSelect')?.addEventListener('change', function () {
+            const selectedText = this.options[this.selectedIndex].text;
+            const judulInput = document.getElementById('bannerJudul');
+            if (selectedText && this.value) {
+                judulInput.value = selectedText;
+            } else {
+                judulInput.value = '';
             }
         });
     </script>

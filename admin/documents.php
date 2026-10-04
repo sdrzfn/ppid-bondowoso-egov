@@ -30,14 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $cat_id = (int) $_POST['category_id'];
     $status = $conn->real_escape_string($_POST['status']);
     $opd_id = ($_SESSION['role'] == 'super_admin') ? (int) $_POST['opd_id'] : (int) ($_SESSION['opd_id'] ?? 0);
+    $buatBerita = isset($_POST['buat_berita']) && $_POST['buat_berita'] == '1';
 
-    // Check if new file uploaded
     if (!empty($_FILES['file']['name']) && $_FILES['file']['error'] === 0) {
         $file_name = time() . '_' . basename($_FILES['file']['name']);
         $target = "../public/uploads/" . $file_name;
         move_uploaded_file($_FILES['file']['tmp_name'], $target);
 
-        // Delete old file
         $oldDoc = $conn->query("SELECT file_path FROM documents WHERE id = $id")->fetch_assoc();
         if ($oldDoc && file_exists($oldDoc['file_path'])) {
             @unlink($oldDoc['file_path']);
@@ -61,6 +60,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             WHERE id=$id");
     }
 
+    if ($buatBerita) {
+        $berita_judul = $conn->real_escape_string($_POST['berita_judul'] ?: $title);
+        $berita_isi = $conn->real_escape_string($_POST['berita_isi'] ?? '');
+        $berita_penulis = $conn->real_escape_string($_POST['berita_penulis'] ?: ($_SESSION['name'] ?? 'Admin'));
+        $berita_tanggal = $conn->real_escape_string($_POST['berita_tanggal'] ?: date('Y-m-d'));
+
+        $current = $conn->query("SELECT berita_link FROM documents WHERE id=$id")->fetch_assoc();
+        $existingBeritaId = 0;
+        if ($current && $current['berita_link'] && strpos($current['berita_link'], 'detail-berita.php?id=') === 0) {
+            $existingBeritaId = (int) str_replace('detail-berita.php?id=', '', $current['berita_link']);
+        }
+
+        $berita_gambar_url = '';
+        if (!empty($_FILES['berita_gambar']['name']) && $_FILES['berita_gambar']['error'] === 0) {
+            $targetDir = "../uploads/berita/";
+            if (!is_dir($targetDir))
+                mkdir($targetDir, 0777, true);
+            $fileName = basename($_FILES['berita_gambar']['name']);
+            $targetFile = $targetDir . time() . "_" . $fileName;
+            if (move_uploaded_file($_FILES['berita_gambar']['tmp_name'], $targetFile)) {
+                $berita_gambar_url = "../uploads/berita/" . time() . "_" . $fileName;
+            }
+        }
+
+        if ($existingBeritaId > 0) {
+            $gambar_clause = $berita_gambar_url ? ", gambar='$berita_gambar_url'" : "";
+            $conn->query("UPDATE berita SET judul='$berita_judul', isi='$berita_isi', penulis='$berita_penulis', tanggal='$berita_tanggal' $gambar_clause WHERE id=$existingBeritaId");
+        } else {
+            $stmt = $conn->prepare("INSERT INTO berita (judul, isi, gambar, penulis, tanggal) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssss", $berita_judul, $berita_isi, $berita_gambar_url, $berita_penulis, $berita_tanggal);
+            $stmt->execute();
+            $berita_id = $conn->insert_id;
+            $berita_link = 'detail-berita.php?id=' . $berita_id;
+            $conn->query("UPDATE documents SET berita_link='$berita_link' WHERE id=$id");
+        }
+    } else {
+        $conn->query("UPDATE documents SET berita_link=NULL WHERE id=$id");
+    }
+
     header("Location: documents.php?status=updated");
     exit;
 }
@@ -73,17 +111,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['create'])) {
     $status = $conn->real_escape_string($_POST['status']);
     $opd_id = ($_SESSION['role'] == 'super_admin') ? (int) $_POST['opd_id'] : (int) ($_SESSION['opd_id'] ?? 0);
     $created = (int) $_SESSION['user_id'];
+    $buatBerita = isset($_POST['buat_berita']) && $_POST['buat_berita'] == '1';
 
-    // Upload file
+    if (empty($_FILES['file']['name']) || $_FILES['file']['error'] !== 0) {
+        $_SESSION['error'] = 'File dokumen wajib diupload!';
+        header("Location: documents.php");
+        exit;
+    }
+
     $file_name = time() . '_' . basename($_FILES['file']['name']);
     $target = "../public/uploads/" . $file_name;
     move_uploaded_file($_FILES['file']['tmp_name'], $target);
 
-    $conn->query("INSERT INTO documents (title, description, file_path, category_id, opd_id, status, created_by) 
-            VALUES ('$title','$desc','$target','$cat_id','$opd_id','$status','$created')");
+    $berita_link = '';
+    if ($buatBerita) {
+        $berita_judul = $conn->real_escape_string($_POST['berita_judul'] ?: $title);
+        $berita_isi = $conn->real_escape_string($_POST['berita_isi'] ?? '');
+        $berita_penulis = $conn->real_escape_string($_POST['berita_penulis'] ?: ($_SESSION['name'] ?? 'Admin'));
+        $berita_tanggal = $conn->real_escape_string($_POST['berita_tanggal'] ?: date('Y-m-d'));
 
-    header("Location: documents.php?status=created");
-    exit;
+        $berita_gambar_url = '';
+        if (!empty($_FILES['berita_gambar']['name']) && $_FILES['berita_gambar']['error'] === 0) {
+            $targetDir = "../uploads/berita/";
+            if (!is_dir($targetDir))
+                mkdir($targetDir, 0777, true);
+            $fileName = basename($_FILES['berita_gambar']['name']);
+            $targetFile = $targetDir . time() . "_" . $fileName;
+            if (move_uploaded_file($_FILES['berita_gambar']['tmp_name'], $targetFile)) {
+                $berita_gambar_url = "../uploads/berita/" . time() . "_" . $fileName;
+            }
+        }
+
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("INSERT INTO berita (judul, isi, gambar, penulis, tanggal) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssss", $berita_judul, $berita_isi, $berita_gambar_url, $berita_penulis, $berita_tanggal);
+            $stmt->execute();
+            $berita_id = $conn->insert_id;
+
+            $berita_link = 'detail-berita.php?id=' . $berita_id;
+
+            $stmt2 = $conn->prepare("INSERT INTO documents (title, description, file_path, berita_link, category_id, opd_id, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt2->bind_param("ssssssss", $title, $desc, $target, $berita_link, $cat_id, $opd_id, $status, $created);
+            $stmt2->execute();
+
+            $conn->commit();
+            header("Location: documents.php?status=created");
+            exit;
+        } catch (Exception $e) {
+            $conn->rollback();
+            $_SESSION['error'] = 'Gagal menyimpan: ' . $e->getMessage();
+            header("Location: documents.php");
+            exit;
+        }
+    } else {
+        $conn->query("INSERT INTO documents (title, description, file_path, category_id, opd_id, status, created_by) 
+                VALUES ('$title','$desc','$target','$cat_id','$opd_id','$status','$created')");
+
+        header("Location: documents.php?status=created");
+        exit;
+    }
 }
 
 // Query dokumen
@@ -115,7 +202,7 @@ include("../admin/header.php");
 include("../admin/sidebar.php");
 ?>
 
-<h2 class="text-2xl font-bold mb-6 ml-6 mt-6">Dokumen</h2>
+<h2 class="text-2xl font-bold mb-6 ml-6 mt-6">Katalog Informasi</h2>
 
 <?php if (isset($_SESSION['success'])): ?>
     <div class="ml-6 mr-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
@@ -133,7 +220,7 @@ include("../admin/sidebar.php");
 
 <!-- Form Tambah Dokumen -->
 <div class="ml-6 mr-6 bg-white shadow-md rounded-lg p-6 mb-8">
-    <h3 class="text-lg font-semibold mb-4">Tambah Dokumen Baru</h3>
+    <h3 class="text-lg font-semibold mb-4">Tambah Informasi Baru</h3>
     <form method="POST" enctype="multipart/form-data" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -173,6 +260,49 @@ include("../admin/sidebar.php");
                 class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 cursor-pointer focus:outline-none focus:ring focus:ring-blue-200">
         </div>
         <div>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="buat_berita" id="buatBeritaCheck" value="1"
+                    class="h-4 w-4 text-sky-600 rounded border-gray-300 focus:ring-sky-500">
+                <span class="text-sm font-semibold text-slate-700">Buat juga sebagai Berita / Info Serta-Merta</span>
+            </label>
+            <p class="text-xs text-slate-500 mt-1">Jika dicentang, dokumen ini akan otomatis terpublish sebagai berita.
+            </p>
+        </div>
+
+        <div id="beritaFields" class="hidden space-y-4 border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+            <p class="text-xs font-bold text-sky-700 uppercase tracking-wider mb-3">Data Berita (Opsional)</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Judul Berita</label>
+                    <input type="text" name="berita_judul" id="beritaJudul" placeholder="Sama dengan judul dokumen"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Penulis</label>
+                    <input type="text" name="berita_penulis"
+                        placeholder="<?= htmlspecialchars($_SESSION['name'] ?? 'Admin') ?>"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Isi Berita</label>
+                <textarea name="berita_isi" rows="4" placeholder="Isi ringkas berita..."
+                    class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Gambar Berita</label>
+                    <input type="file" name="berita_gambar" accept="image/*"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-50 cursor-pointer focus:outline-none focus:ring focus:ring-blue-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Tanggal</label>
+                    <input type="date" name="berita_tanggal" value="<?= date('Y-m-d') ?>"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                </div>
+            </div>
+        </div>
+        <div>
             <label class="block font-semibold mb-1">Status</label>
             <select name="status"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200">
@@ -209,10 +339,19 @@ include("../admin/sidebar.php");
                         <td class="px-4 py-3 text-sm"><?= htmlspecialchars($d['category_name'] ?? '-') ?></td>
                         <td class="px-4 py-3 text-sm"><?= htmlspecialchars($d['opd_name'] ?? '-') ?></td>
                         <td class="px-4 py-3">
-                            <a href="<?= htmlspecialchars($d['file_path']) ?>" target="_blank"
-                                class="text-blue-600 hover:underline text-sm">
-                                <i class="fa-solid fa-file"></i> Lihat
-                            </a>
+                            <?php if ($d['berita_link']): ?>
+                                <a href="/<?= htmlspecialchars($d['berita_link']) ?>" target="_blank"
+                                    class="text-sky-600 hover:underline text-sm">
+                                    <i class="fa-solid fa-link"></i> Lihat Link
+                                </a>
+                            <?php elseif ($d['file_path']): ?>
+                                <a href="<?= htmlspecialchars($d['file_path']) ?>" target="_blank"
+                                    class="text-blue-600 hover:underline text-sm">
+                                    <i class="fa-solid fa-file"></i> Lihat
+                                </a>
+                            <?php else: ?>
+                                <span class="text-gray-400 text-sm">Tidak ada</span>
+                            <?php endif; ?>
                         </td>
                         <td class="px-4 py-3">
                             <span
@@ -226,7 +365,7 @@ include("../admin/sidebar.php");
                         </td>
                         <td class="px-4 py-3 text-center">
                             <button
-                                onclick="openEditModal(<?= $d['id'] ?>, '<?= htmlspecialchars($d['title'], ENT_QUOTES) ?>', '<?= htmlspecialchars($d['description'], ENT_QUOTES) ?>', '<?= htmlspecialchars($d['file_path'], ENT_QUOTES) ?>', <?= $d['category_id'] ?>, <?= $d['opd_id'] ?>, '<?= $d['status'] ?>')"
+                                onclick="openEditModal(<?= $d['id'] ?>, '<?= htmlspecialchars($d['title'], ENT_QUOTES) ?>', '<?= htmlspecialchars($d['description'], ENT_QUOTES) ?>', '<?= htmlspecialchars($d['file_path'] ?? '', ENT_QUOTES) ?>', <?= $d['category_id'] ?>, <?= $d['opd_id'] ?>, '<?= $d['status'] ?>', '<?= htmlspecialchars($d['berita_link'] ?? '', ENT_QUOTES) ?>')"
                                 class="text-blue-600 hover:text-blue-800 mr-2 text-xs font-semibold" title="Edit">
                                 <i class="fa-solid fa-edit"></i> Edit
                             </button>
@@ -317,6 +456,48 @@ include("../admin/sidebar.php");
                         </select>
                     </div>
                 </div>
+                <div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="buat_berita" id="editBuatBerita" value="1"
+                            class="h-4 w-4 text-sky-600 rounded border-gray-300 focus:ring-sky-500">
+                        <span class="text-sm font-semibold text-slate-700">Tautkan ke Berita / Info Serta-Merta</span>
+                    </label>
+                </div>
+
+                <div id="editBeritaFields"
+                    class="hidden space-y-4 border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Judul Berita</label>
+                            <input type="text" name="berita_judul" id="editBeritaJudul"
+                                placeholder="Sama dengan judul dokumen"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Penulis</label>
+                            <input type="text" name="berita_penulis" id="editBeritaPenulis" placeholder="Nama penulis"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Isi Berita</label>
+                        <textarea name="berita_isi" id="editBeritaIsi" rows="4" placeholder="Isi ringkas berita..."
+                            class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Gambar Berita</label>
+                            <input type="file" name="berita_gambar" id="editBeritaGambar" accept="image/*"
+                                class="w-full border rounded-lg px-3 py-2 bg-gray-50 cursor-pointer">
+                            <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengganti gambar.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tanggal</label>
+                            <input type="date" name="berita_tanggal" id="editBeritaTanggal"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Footer Actions -->
                 <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
@@ -336,7 +517,7 @@ include("../admin/sidebar.php");
 
 <script>
     // Modal functions
-    function openEditModal(id, title, description, filePath, categoryId, opdId, status) {
+    function openEditModal(id, title, description, filePath, categoryId, opdId, status, beritaLink) {
         document.getElementById('editId').value = id;
         document.getElementById('editTitle').value = title;
         document.getElementById('editDescription').value = description;
@@ -344,14 +525,32 @@ include("../admin/sidebar.php");
         document.getElementById('editOpd').value = opdId;
         document.getElementById('editStatus').value = status;
 
-        // Reset file input
+        const buatBeritaCheck = document.getElementById('editBuatBerita');
+        const beritaFields = document.getElementById('editBeritaFields');
+
+        if (beritaLink && beritaLink.trim() !== '' && beritaLink.includes('detail-berita.php?id=')) {
+            buatBeritaCheck.checked = true;
+            beritaFields.classList.remove('hidden');
+        } else {
+            buatBeritaCheck.checked = false;
+            beritaFields.classList.add('hidden');
+        }
+
         document.getElementById('editFile').value = '';
 
-        // Show modal
         const modal = document.getElementById('editModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }
+
+    document.getElementById('editBuatBerita')?.addEventListener('change', function () {
+        const fields = document.getElementById('editBeritaFields');
+        if (this.checked) {
+            fields.classList.remove('hidden');
+        } else {
+            fields.classList.add('hidden');
+        }
+    });
 
     function closeModal() {
         const modal = document.getElementById('editModal');
@@ -373,6 +572,15 @@ include("../admin/sidebar.php");
             if (!modal.classList.contains('hidden')) {
                 closeModal();
             }
+        }
+    });
+
+    document.getElementById('buatBeritaCheck')?.addEventListener('change', function () {
+        const fields = document.getElementById('beritaFields');
+        if (this.checked) {
+            fields.classList.remove('hidden');
+        } else {
+            fields.classList.add('hidden');
         }
     });
 </script>

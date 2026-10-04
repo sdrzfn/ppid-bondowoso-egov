@@ -10,7 +10,7 @@ include("../config/database.php");
 // Hitung data
 $total_users = $conn->query("SELECT COUNT(*) AS jml FROM users")->fetch_assoc()['jml'];
 $total_opd = $conn->query("SELECT COUNT(*) AS jml FROM opd")->fetch_assoc()['jml'];
-$total_cat = $conn->query("SELECT COUNT(*) AS jml FROM categories")->fetch_assoc()['jml'];
+$total_permohonan = $conn->query("SELECT COUNT(*) AS jml FROM tickets")->fetch_assoc()['jml'];
 $total_docs = $conn->query("SELECT COUNT(*) AS jml FROM documents")->fetch_assoc()['jml'];
 
 include("../admin/header.php");
@@ -46,8 +46,8 @@ include("../admin/sidebar.php");
                 🏷️
             </div>
             <div>
-                <p class="text-gray-500 text-sm">Total Kategori</p>
-                <p class="text-xl font-semibold"><?= $total_cat ?></p>
+                <p class="text-gray-500 text-sm">Total Permohonan</p>
+                <p class="text-xl font-semibold"><?= $total_permohonan ?></p>
             </div>
         </div>
 

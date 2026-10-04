@@ -38,7 +38,7 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
                 <path
                     d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L13 1.586A2 2 0 0011.586 1H4z" />
             </svg>
-            Dokumen Informasi
+            Katalog Informasi
         </a>
 
         <!-- Kelola Layanan -->

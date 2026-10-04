@@ -1,7 +1,5 @@
 <?php
 include("../config/database.php");
-include("header.php");
-include("sidebar.php");
 
 $berita = $conn->query("SELECT * FROM berita ORDER BY tanggal DESC");
 
@@ -11,25 +9,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
     $penulis = $conn->real_escape_string($_POST['penulis']);
     $tanggal = $conn->real_escape_string($_POST['tanggal']);
 
+    // Cek apakah ada file gambar yang diupload
+    if (!isset($_FILES["gambar"]) || $_FILES["gambar"]["error"] !== 0 || empty($_FILES["gambar"]["name"])) {
+        die("Gambar wajib diupload!");
+    }
+
     $targetDir = "../uploads/berita/";
     if (!is_dir($targetDir)) {
         mkdir($targetDir, 0777, true);
     }
 
     $fileName = basename($_FILES["gambar"]["name"]);
-    $targetFile = $targetDir . time() . "_" . $fileName; // rename biar unik
+    $targetFile = $targetDir . time() . "_" . $fileName;
     $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
+    // Validasi apakah file benar-benar gambar
     $check = getimagesize($_FILES["gambar"]["tmp_name"]);
     if ($check === false) {
         die("File bukan gambar!");
     }
 
     if (move_uploaded_file($_FILES["gambar"]["tmp_name"], $targetFile)) {
-        // Buat link relatif untuk database
         $gambarUrl = "../uploads/berita/" . time() . "_" . $fileName;
 
-        // Insert ke database
         $stmt = $conn->prepare("INSERT INTO berita (judul, isi, gambar, penulis, tanggal) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $judul, $isi, $gambarUrl, $penulis, $tanggal);
 
@@ -67,6 +69,9 @@ if (isset($_GET['hapus'])) {
     header("Location: news.php");
     exit;
 }
+
+include("header.php");
+include("sidebar.php");
 ?>
 
 <!DOCTYPE html>
@@ -89,7 +94,7 @@ if (isset($_GET['hapus'])) {
                 <table class="min-w-full text-sm border border-gray-200 rounded-lg">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-4 py-2 border">ID</th>
+                            <th class="px-4 py-2 border">No</th> <!-- Mengubah header menjadi No -->
                             <th class="px-4 py-2 border">Judul</th>
                             <th class="px-4 py-2 border">Penulis</th>
                             <th class="px-4 py-2 border">Tanggal</th>
@@ -98,21 +103,24 @@ if (isset($_GET['hapus'])) {
                     </thead>
                     <tbody>
                         <?php if ($berita->num_rows > 0): ?>
-                            <?php while ($b = $berita->fetch_assoc()): ?>
+                            <?php
+                            $no = 1;
+                            while ($b = $berita->fetch_assoc()):
+                                ?>
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-2 border"><?= $b['id'] ?></td>
+                                    <td class="px-4 py-2 border"><?= $no++ ?></td>
                                     <td class="px-4 py-2 border font-medium"><?= htmlspecialchars($b['judul']) ?></td>
                                     <td class="px-4 py-2 border"><?= htmlspecialchars($b['penulis']) ?></td>
                                     <td class="px-4 py-2 border"><?= date("d-m-Y", strtotime($b['tanggal'])) ?></td>
                                     <td class="px-4 py-2 border space-x-2">
                                         <button class="text-blue-600 hover:underline" onclick="openModal(
-                                                <?= $b['id'] ?>,
-                                                '<?= htmlspecialchars($b['judul'], ENT_QUOTES) ?>',
-                                                '<?= htmlspecialchars($b['isi'], ENT_QUOTES) ?>',
-                                                '<?= htmlspecialchars($b['gambar'], ENT_QUOTES) ?>',
-                                                '<?= htmlspecialchars($b['penulis'], ENT_QUOTES) ?>',
-                                                '<?= $b['tanggal'] ?>'
-                                            )">Edit</button>
+                                            <?= $b['id'] ?>,
+                                            <?= htmlspecialchars(json_encode($b['judul'])) ?>,
+                                            <?= htmlspecialchars(json_encode($b['isi'])) ?>,
+                                            <?= htmlspecialchars(json_encode($b['gambar'])) ?>,
+                                            <?= htmlspecialchars(json_encode($b['penulis'])) ?>,
+                                            '<?= date('Y-m-d', strtotime($b['tanggal'])) ?>'
+                                        )">Edit</button>
                                         <a href="news.php?hapus=<?= $b['id'] ?>"
                                             onclick="return confirm('Yakin ingin menghapus berita ini?')"
                                             class="text-red-600 hover:underline">Hapus</a>
@@ -132,7 +140,7 @@ if (isset($_GET['hapus'])) {
         <!-- Form Tambah -->
         <div class="bg-white shadow-md rounded-lg p-6">
             <h2 class="text-lg font-semibold mb-4">Tambah Berita Baru</h2>
-            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Judul</label>
                     <input type="text" name="judul" required

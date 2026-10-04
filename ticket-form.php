@@ -966,6 +966,21 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
 
         // Initialize
         updateStepUI();
+
+        document.querySelectorAll('input[name="kategori_pemohon"]').forEach((radio) => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('input[name="kategori_pemohon"]').forEach((input) => {
+                    const label = input.closest('label');
+                    label.classList.remove('border-2', 'border-sky-700', 'bg-sky-50/50');
+                    label.classList.add('border', 'border-slate-200');
+                });
+                if (this.checked) {
+                    const activeLabel = this.closest('label');
+                    activeLabel.classList.remove('border', 'border-slate-200');
+                    activeLabel.classList.add('border-2', 'border-sky-700', 'bg-sky-50/50');
+                }
+            });
+        });
     </script>
 
 </body>

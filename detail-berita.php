@@ -23,12 +23,24 @@ $detail = $conn->query("SELECT * FROM berita WHERE id=$id")->fetch_assoc();
 
     <!-- Detail Berita -->
     <main class="max-w-4xl mx-auto px-4 py-10">
-        <img src="<?= $detail['gambar'] ?>" class="rounded-2xl shadow-lg mb-6" alt="gambar berita">
-        <h2 class="text-3xl font-bold text-gray-800 mb-4"><?= $detail['judul'] ?></h2>
-        <p class="text-gray-500 text-sm mb-6">Dipublikasikan pada: <?= date("d M Y", strtotime($detail['tanggal'])) ?> |
-            Oleh: <?= $detail['penulis'] ?></p>
-        <article class="prose max-w-none">
-            <p><?= nl2br($detail['isi']) ?></p>
+        <img src="<?= $detail['gambar'] ?>" class="rounded-2xl shadow-lg mb-6 w-full object-cover max-h-[500px]"
+            alt="gambar berita">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4"><?= htmlspecialchars($detail['judul']) ?></h2>
+        <p class="text-gray-500 text-sm mb-6 pb-4 border-b border-gray-200">
+            Dipublikasikan pada: <span class="font-medium"><?= date("d M Y", strtotime($detail['tanggal'])) ?></span> |
+            Oleh: <span class="font-medium"><?= htmlspecialchars($detail['penulis']) ?></span>
+        </p>
+        <article class="prose max-w-none text-gray-700 text-justify leading-relaxed space-y-4">
+            <?php
+            $isi_berita = str_replace(["\r\n", "\r"], "\n", $detail['isi']);
+            $paragraf = explode("\n\n", $isi_berita);
+
+            foreach ($paragraf as $p) {
+                if (trim($p) !== '') {
+                    echo '<p>' . nl2br(htmlspecialchars(trim($p))) . '</p>';
+                }
+            }
+            ?>
         </article>
     </main>
 

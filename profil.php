@@ -163,7 +163,13 @@ include('config/database.php');
             <!-- Sidebar Berita -->
             <aside>
                 <div class="rounded-xl border border-slate-300 p-5 bg-white shadow">
-                    <h3 class="font-semibold mb-1 text-lg">Berita</h3>
+                    <div class="flex justify-between items-end mb-1">
+                        <h3 class="font-semibold text-lg">Berita</h3>
+                        <a href="berita.php"
+                            class="text-sm font-medium text-sky-600 hover:text-sky-700 hover:underline transition">
+                            Lihat Semua &rarr;
+                        </a>
+                    </div>
                     <div class="h-1 w-16 bg-sky-600 mb-4"></div>
 
                     <ul class="space-y-4">
