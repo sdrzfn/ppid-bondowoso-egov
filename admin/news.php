@@ -1,5 +1,11 @@
 <?php
-include("../config/database.php");
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../admin/login.php");
+    exit;
+}
+
+include '../config/database.php';
 
 $berita = $conn->query("SELECT * FROM berita ORDER BY tanggal DESC");
 
