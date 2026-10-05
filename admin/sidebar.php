@@ -85,7 +85,7 @@ $name = $user['name'] ?? ($_SESSION['name'] ?? 'Guest');
         </a>
 
         <!-- Kelola Survey -->
-        <a href="survey.php"
+        <a href="../admin/survey.php"
             class="flex items-center gap-3 px-3 py-2 font-semibold rounded hover:bg-blue-700 hover:pl-4 transition-all duration-200 border-b border-blue-700">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-5 h-5">
