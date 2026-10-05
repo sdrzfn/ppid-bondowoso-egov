@@ -1,6 +1,12 @@
 <?php
-include '../admin/header.php';
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../admin/login.php");
+    exit;
+}
+
 include '../config/database.php';
+include '../admin/header.php';
 include '../admin/sidebar.php';
 
 if (isset($_GET['id'])) {

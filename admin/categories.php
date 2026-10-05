@@ -1,7 +1,13 @@
 <?php
-include("../admin/header.php");
-include("../admin/sidebar.php");
-include("../config/database.php");
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../admin/login.php");
+    exit;
+}
+
+include '../config/database.php';
+include '../admin/header.php';
+include '../admin/sidebar.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = $_POST['name'];
