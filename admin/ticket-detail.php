@@ -16,15 +16,41 @@ if (!$ticket) {
 
 // Update status
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $newStatus = $_POST['status'];
-    $notes = $_POST['notes'];
+    $newStatus = $conn->real_escape_string($_POST['status']);
+    $notes = $conn->real_escape_string($_POST['notes']);
+
+    // Handle file upload
+    $lampiranUpdate = '';
+    if (!empty($_FILES['lampiran_balasan']['name']) && $_FILES['lampiran_balasan']['error'] === 0) {
+        $allowed = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png'];
+        $ext = strtolower(pathinfo($_FILES['lampiran_balasan']['name'], PATHINFO_EXTENSION));
+
+        if (isset($allowed[$ext]) && $_FILES['lampiran_balasan']['size'] <= 5 * 1024 * 1024) {
+            $fileName = 'ticket_' . $ticket['id'] . '_' . time() . '.' . $ext;
+            $targetDir = '../uploads/ticket-respons/';
+            if (!is_dir($targetDir))
+                mkdir($targetDir, 0777, true);
+            $targetFile = $targetDir . $fileName;
+
+            if (move_uploaded_file($_FILES['lampiran_balasan']['tmp_name'], $targetFile)) {
+                $lampiranUpdate = 'uploads/ticket-respons/' . $fileName;
+                if ($ticket['lampiran_balasan'] && file_exists('../' . $ticket['lampiran_balasan'])) {
+                    @unlink('../' . $ticket['lampiran_balasan']);
+                }
+            }
+        }
+    }
 
     // Insert history
     $conn->query("INSERT INTO ticket_history (ticket_id, status_lama, status_baru, catatan, updated_by) 
-                  VALUES ({$ticket['id']}, '{$ticket['status']}', '$newStatus', '$notes', '{$_SESSION['name']}')");
+                  VALUES ({$ticket['id']}, '{$ticket['status']}', '$newStatus', '$notes', '{$conn->real_escape_string($_SESSION['name'])}')");
 
     // Update ticket
-    $conn->query("UPDATE tickets SET status = '$newStatus', notes = '$notes' WHERE id = {$ticket['id']}");
+    if ($lampiranUpdate) {
+        $conn->query("UPDATE tickets SET status = '$newStatus', notes = '$notes', lampiran_balasan = '$lampiranUpdate' WHERE id = {$ticket['id']}");
+    } else {
+        $conn->query("UPDATE tickets SET status = '$newStatus', notes = '$notes' WHERE id = {$ticket['id']}");
+    }
 
     header("Location: ticket-detail.php?id=$id");
     exit;
@@ -160,18 +186,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="lg:col-span-1">
                 <div class="bg-white shadow rounded-lg p-6 sticky top-24">
                     <h3 class="text-lg font-semibold mb-4">Update Status</h3>
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Status Baru</label>
                             <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="menunggu" <?= $ticket['status'] == 'menunggu' ? 'selected' : '' ?>>Menunggu
-                                </option>
-                                <option value="diproses" <?= $ticket['status'] == 'diproses' ? 'selected' : '' ?>>Diproses
-                                </option>
-                                <option value="selesai" <?= $ticket['status'] == 'selesai' ? 'selected' : '' ?>>Selesai
-                                </option>
-                                <option value="ditolak" <?= $ticket['status'] == 'ditolak' ? 'selected' : '' ?>>Ditolak
-                                </option>
+                                <option value="menunggu" <?= $ticket['status'] == 'menunggu' ? 'selected' : '' ?>>Menunggu</option>
+                                <option value="diproses" <?= $ticket['status'] == 'diproses' ? 'selected' : '' ?>>Diproses</option>
+                                <option value="selesai" <?= $ticket['status'] == 'selesai' ? 'selected' : '' ?>>Selesai</option>
+                                <option value="ditolak" <?= $ticket['status'] == 'ditolak' ? 'selected' : '' ?>>Ditolak</option>
                             </select>
                         </div>
                         <div class="mb-4">
@@ -179,6 +201,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <textarea name="notes" rows="4"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2"><?= htmlspecialchars($ticket['notes']) ?></textarea>
                         </div>
+
+                        <!-- Upload Berkas Respons -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-1">Berkas Respons (PDF)</label>
+                            <input type="file" name="lampiran_balasan" accept=".pdf,.jpg,.jpeg,.png"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 cursor-pointer text-sm">
+                            <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ada perubahan.</p>
+                        </div>
+
+                        <?php if ($ticket['lampiran_balasan']): ?>
+                            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p class="text-xs font-semibold text-green-700 mb-1">
+                                    <i class="fa-solid fa-file-circle-check mr-1"></i> Berkas Tersedia
+                                </p>
+                                <a href="<?= htmlspecialchars($ticket['lampiran_balasan']) ?>" target="_blank"
+                                    class="text-xs text-green-600 hover:underline font-medium">
+                                    <i class="fa-solid fa-download mr-1"></i> Unduh Berkas Saat Ini
+                                </a>
+                            </div>
+                        <?php endif; ?>
+
                         <button type="submit"
                             class="w-full bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700">
                             Update Status
