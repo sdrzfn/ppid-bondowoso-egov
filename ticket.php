@@ -78,9 +78,16 @@ $isFromSubmission = !empty($ticketNumber);
     <!-- Ticket Number Display -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8 text-center animate-fade-in">
         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor Resi Permohonan Anda</p>
-        <div class="inline-flex items-center gap-3 bg-slate-100 px-8 py-4 rounded-xl border border-slate-200">
-            <i class="fa-solid fa-ticket text-sky-700 text-xl"></i>
-            <span class="text-2xl font-bold text-slate-900 tracking-wider font-mono"><?= htmlspecialchars($ticketNumber) ?></span>
+        <div class="inline-flex items-center gap-3 bg-slate-100 pl-8 pr-4 py-4 rounded-xl border border-slate-200">
+            <span id="ticketNumber" class="text-2xl font-bold text-slate-900 tracking-wider font-mono"><?= htmlspecialchars($ticketNumber) ?></span>
+            <button onclick="copyTicketNumber()" id="copyBtn" class="p-2 text-slate-500 hover:text-sky-700 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition" title="Salin Nomor Resi">
+                <div id="copyIconContainer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                    </svg>
+                </div>
+            </button>
         </div>
         <p class="text-xs text-slate-500 mt-3">Gunakan nomor ini untuk melacak status permohonan Anda kapan saja.</p>
         
@@ -93,6 +100,8 @@ $isFromSubmission = !empty($ticketNumber);
             </a>
         </div>
     </div>
+
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <!-- Choice Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
@@ -201,6 +210,71 @@ $isFromSubmission = !empty($ticketNumber);
 
 <script src="https://cdn.userway.org/widget.js" data-account="d9ZmCPKv7k"></script>
 <script src="assets/js/scripts.js"></script>
+
+<script>
+function copyTicketNumber() {
+    const ticketText = document.getElementById('ticketNumber').innerText;
+    const iconContainer = document.getElementById('copyIconContainer');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // Desain SVG awal (Dua Kotak)
+    const defaultSvg = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+        </svg>
+    `;
+
+    // Desain SVG Sukses (Centang)
+    const successSvg = `
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+    `;
+
+    navigator.clipboard.writeText(ticketText).then(() => {
+        iconContainer.innerHTML = successSvg;
+        copyBtn.classList.add("bg-emerald-50", "border-emerald-200");
+        showToast("Nomor resi berhasil disalin!");
+
+        // Kembalikan ke bentuk Dua Kotak setelah 2 detik
+        setTimeout(() => {
+            iconContainer.innerHTML = defaultSvg;
+            copyBtn.classList.remove("bg-emerald-50", "border-emerald-200");
+        }, 2000);
+    }).catch(err => {
+        console.error('Gagal menyalin teks: ', err);
+    });
+}
+
+// Fungsi untuk Membuat dan Menampilkan Toast
+function showToast(message) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = "flex items-center gap-3 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-lg transition-all duration-300 transform translate-y-5 opacity-0";
+    
+    // Isi konten Toast beserta SVG Checkmark Putih
+    toast.innerHTML = `
+        <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('translate-y-5', 'opacity-0');
+    }, 10);
+    
+    // Hapus Toast Otomatis setelah 3 detik
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+</script>
 
 </body>
 </html>
