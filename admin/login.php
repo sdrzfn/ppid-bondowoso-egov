@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!empty($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
 include("../config/database.php");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
