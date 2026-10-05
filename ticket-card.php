@@ -128,6 +128,25 @@ $currentStep = $statusMap[$status] ?? 0;
                     </div>
                 </div>
 
+                                <!-- Download Respons (hanya jika selesai & ada berkas) -->
+                <?php if ($status === 'selesai' && !empty($ticket['lampiran_balasan'])): ?>
+                    <div class="bg-green-50 rounded-xl p-5 border border-green-200">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-file-circle-check text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-green-800">Dokumen Siap Diunduh</h4>
+                                <p class="text-xs text-green-700 mt-0.5">Tanggapan dan salinan informasi untuk permohonan Anda telah tersedia.</p>
+                                <a href="ticket-download.php?number=<?= urlencode($ticket['ticket_number']) ?>"
+                                    class="inline-flex items-center gap-2 mt-3 text-xs font-bold bg-green-600 text-white px-3.5 py-2 rounded-lg hover:bg-green-700 transition">
+                                    <i class="fa-solid fa-download"></i> Unduh Dokumen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
                 <!-- Support Card -->
                 <div class="bg-sky-700 rounded-xl p-5 text-white shadow-md">
                     <h4 class="font-bold text-sm mb-1">Butuh Bantuan?</h4>
