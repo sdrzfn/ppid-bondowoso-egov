@@ -560,7 +560,7 @@ $ticketData = $_SESSION['ticket_data'] ?? [];
 
                 if (step < currentStep) {
                     circle.className = 'w-10 h-10 rounded-full bg-green-600 text-white font-bold flex items-center justify-center shadow-md ring-4 ring-green-50 step-circle';
-                    circle.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
+                    circle.innerHTML = '<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
                     label.className = 'text-xs font-bold text-green-600 mt-2 hidden sm:block';
                 } else if (step === currentStep) {
                     circle.className = 'w-10 h-10 rounded-full bg-sky-700 text-white font-bold flex items-center justify-center shadow-md ring-4 ring-blue-50 step-circle';
